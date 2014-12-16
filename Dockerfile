@@ -1,6 +1,13 @@
 FROM ubuntu
 MAINTAINER Reclaim Hosting <info@reclaimhosting.com>
 
+RUN mkdir /data
+RUN mkdir /data/db
+RUN mkdir /data/app
+
+# Define mountable directories.
+VOLUME ["/data/db", "/data/app"]
+
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
 
 RUN echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/mongodb.list
@@ -8,13 +15,6 @@ RUN echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install git python build-essential wget screen tmux curl mongodb-org -y
 RUN sudo service mongod start
-
-RUN mkdir /data
-RUN mkdir /data/db
-RUN mkdir /data/app
-
-# Define mountable directories.
-VOLUME ["/data/db", "/data/app"]
 
 # Install Node.js
 RUN \
@@ -40,9 +40,10 @@ WORKDIR /data/app
 ENV sailsapp="sails"
 
 # Create Sails application
-RUN sails new $sailsapp && \
-  cd $sailsapp && \
-  npm install sails-mongo --save
+RUN sails new sailsapp
+WORKDIR sailsapp
+RUN npm install
+RUN npm install sails-mongo --save
 
 # Expose ports
 EXPOSE 3000
