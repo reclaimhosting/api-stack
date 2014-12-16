@@ -1,8 +1,6 @@
 FROM ubuntu
 MAINTAINER Reclaim Hosting <info@reclaimhosting.com>
 
-ENV appName sailsapp
-
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
 
 RUN echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/mongodb.list
@@ -14,6 +12,9 @@ RUN sudo service mongod start
 RUN mkdir /data
 RUN mkdir /data/db
 RUN mkdir /data/app
+
+# Define mountable directories.
+VOLUME ["/data/db", "/data/app"]
 
 # Install Node.js
 RUN \
@@ -36,13 +37,12 @@ RUN npm install -g sails
 # Define working directory.
 WORKDIR /data/app
 
-# Create Sails application
-RUN sails new ${appName}
-WORKDIR ${appName}
-RUN npm install sails-mongo --save
+ENV sailsapp="sails"
 
-# Define mountable directories.
-VOLUME ["/data"]
+# Create Sails application
+RUN sails new $sailsapp && \
+  cd $sailsapp && \
+  npm install sails-mongo --save
 
 # Expose ports
 EXPOSE 3000
